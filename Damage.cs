@@ -1450,14 +1450,14 @@ namespace LeagueSharp.Common
                 "Fiora",
                 new List<DamageSpell>
                     {
-                        //Q - per dash
+                        //Q
                         new DamageSpell
                             {
                                 Slot = SpellSlot.Q, DamageType = DamageType.Physical,
                                 Damage =
                                     (source, target, level) =>
-                                    new double[] { 40, 65, 90, 115, 140 }[level]
-                                    + 0.6 * source.FlatPhysicalDamageMod
+                                    new double[] { 65, 75, 85, 95, 105 }[level]
+                                    + new [] { .55, .70, .85, 1, 1.15 }[level] * source.FlatPhysicalDamageMod
                             },
                         //W 
                         new DamageSpell
@@ -1465,17 +1465,8 @@ namespace LeagueSharp.Common
                                 Slot = SpellSlot.W, DamageType = DamageType.Magical,
                                 Damage =
                                     (source, target, level) =>
-                                    new double[] { 60, 110, 160, 210, 260 }[level]
+                                    new double[] { 90, 130, 170, 210, 250 }[level]
                                     + 1 * source.FlatMagicDamageMod
-                            },
-                        //R - Max damage
-                        new DamageSpell
-                            {
-                                Slot = SpellSlot.R, DamageType = DamageType.Physical,
-                                Damage =
-                                    (source, target, level) =>
-                                    new double[] { 325, 663, 1001 }[level]
-                                    + 2.34 * source.FlatPhysicalDamageMod
                             },
                     });
 
@@ -5352,8 +5343,6 @@ namespace LeagueSharp.Common
                         return 20 + 8 * source.Level;
                     }
 
-                    if (target.GetBuffCount("gnarw") == 2)
-
                     if (challengingSmite != null)
 
                     {
@@ -5955,7 +5944,7 @@ namespace LeagueSharp.Common
             // + Basic attacks and single target abilities do 2 bonus damage to minions and monsters. 
             if (hero != null && target is Obj_AI_Minion)
             {
-                if (hero.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 65 && m.Points == 1))
+                if (hero.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 68 && m.Points == 1))
                 {
                     value += 2d;
                 }
