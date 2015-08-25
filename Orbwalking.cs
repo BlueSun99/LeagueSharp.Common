@@ -66,7 +66,7 @@ namespace LeagueSharp.Common
             "monkeykingdoubleattack", "mordekaisermaceofspades", "nasusq", "nautiluspiercinggaze", "netherblade",
             "parley", "poppydevastatingblow", "powerfist", "renektonpreexecute", "rengarq", "shyvanadoubleattack",
             "sivirw", "takedown", "talonnoxiandiplomacy", "trundletrollsmash", "vaynetumble", "vie", "volibearq",
-            "xenzhaocombotarget", "yorickspectral", "reksaiq"
+            "xenzhaocombotarget", "yorickspectral", "reksaiq", "itemtitanichydracleave"
         };
 
         //Spells that are not attacks even if they have the "attack" word in their name.
@@ -104,7 +104,6 @@ namespace LeagueSharp.Common
         static Orbwalking()
         {
             Player = ObjectManager.Player;
-            FakeClicks.Initiate();
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpell;
             MissileClient.OnCreate += MissileClient_OnCreate;
             Spellbook.OnStopCast += SpellbookOnStopCast;
@@ -358,7 +357,12 @@ namespace LeagueSharp.Common
                             LastAATick = Utils.GameTimeTickCount + Game.Ping + 100 - (int)(ObjectManager.Player.AttackCastDelay * 1000f);
                             _missileLaunched = false;
                         }
-                        Player.IssueOrder(GameObjectOrder.AttackUnit, target);
+
+                        if (!Player.IssueOrder(GameObjectOrder.AttackUnit, target))
+                        {
+                            ResetAutoAttackTimer();
+                        }
+
                         _lastTarget = target;
                         return;
                     }
@@ -653,7 +657,11 @@ namespace LeagueSharp.Common
                                     minion.IsValidTarget() && InAutoAttackRange(minion) &&
                                     minion.Health <
                                     2 *
-                                    (ObjectManager.Player.BaseAttackDamage + ObjectManager.Player.FlatPhysicalDamageMod));
+                                    (ObjectManager.Player.BaseAttackDamage + ObjectManager.Player.FlatPhysicalDamageMod))
+                                    .OrderByDescending(minion => minion.CharData.BaseSkinName.Contains("Siege"))
+                                    .ThenBy(minion => minion.CharData.BaseSkinName.Contains("Super"))
+                                    .ThenBy(minion => minion.Health)
+                                    .ThenByDescending(minion => minion.MaxHealth);
 
                     foreach (var minion in MinionList)
                     {

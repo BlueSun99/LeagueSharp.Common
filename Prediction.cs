@@ -32,6 +32,8 @@ using SharpDX;
 
 namespace LeagueSharp.Common
 {
+
+
     public enum HitChance
     {
         Immobile = 8,
@@ -57,7 +59,8 @@ namespace LeagueSharp.Common
         Minions,
         Heroes,
         YasuoWall,
-        Walls
+        Walls,
+        Allies
     }
 
     public class PredictionInput
@@ -207,7 +210,18 @@ namespace LeagueSharp.Common
     /// </summary>
     public static class Prediction
     {
-        public static PredictionOutput GetPrediction(Obj_AI_Base unit, float delay)
+        internal static void Initialize()
+        {
+            CustomEvents.Game.OnGameLoad += eventArgs =>
+            {
+                var menu = new Menu("Prediction", "Prediction");
+                var slider = new MenuItem("PredMaxRange", "Max Range %").SetValue(new Slider(100, 70, 100));
+                menu.AddItem(slider);
+                CommonMenu.Config.AddSubMenu(menu);
+            };
+        }
+
+    public static PredictionOutput GetPrediction(Obj_AI_Base unit, float delay)
         {
             return GetPrediction(new PredictionInput { Unit = unit, Delay = delay });
         }
@@ -284,6 +298,10 @@ namespace LeagueSharp.Common
                 if (remainingImmobileT >= 0d)
                 {
                     result = GetImmobilePrediction(input, remainingImmobileT);
+                }
+                else
+                {
+                    input.Range = input.Range * CommonMenu.Config.Item("PredMaxRange").GetValue<Slider>().Value / 100f;
                 }
             }
 
@@ -491,7 +509,16 @@ namespace LeagueSharp.Common
             if (pLength >= input.Delay * speed - input.RealRadius &&
                 Math.Abs(input.Speed - float.MaxValue) > float.Epsilon)
             {
-                path = path.CutPath(input.Delay * speed - input.RealRadius);
+                var d = input.Delay * speed - input.RealRadius;
+                if (input.Type == SkillshotType.SkillshotLine || input.Type == SkillshotType.SkillshotCone)
+                {
+                    if (input.From.Distance(input.Unit.ServerPosition, true) < 200 * 200)
+                    {
+                        d = input.Delay * speed;
+                    }
+                }
+
+                path = path.CutPath(d);
                 var tT = 0f;
                 for (var i = 0; i < path.Count - 1; i++)
                 {
@@ -910,6 +937,26 @@ namespace LeagueSharp.Common
                                 }
                             }
                             break;
+                            
+                        case CollisionableObjects.Allies:
+                            foreach (var hero in
+                                HeroManager.Allies.FindAll(
+                                    hero =>
+                                       Vector3.Distance(ObjectManager.Player.ServerPosition, hero.ServerPosition) <= Math.Min(input.Range + input.Radius + 100, 2000))
+                                )
+                            {
+                                input.Unit = hero;
+                                var prediction = Prediction.GetPrediction(input, false, false);
+                                if (
+                                    prediction.UnitPosition.To2D()
+                                        .Distance(input.From.To2D(), position.To2D(), true, true) <=
+                                    Math.Pow((input.Radius + 50 + hero.BoundingRadius), 2))
+                                {
+                                    result.Add(hero);
+                                }
+                            }
+                            break;
+                            
 
                         case CollisionableObjects.Walls:
                             var step = position.Distance(input.From) / 20;
