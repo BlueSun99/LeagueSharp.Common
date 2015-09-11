@@ -282,11 +282,8 @@ namespace LeagueSharp.Common
             //&& _missileLastTick >= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
             if (Orbwalker.MissileCheck)
             {
-                if (_missileLaunched && _missileLastTick >= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
-                {
-                    _missileLastTick = Utils.GameTimeTickCount;
+                if (_missileLaunched && _missileLastTick < Utils.GameTimeTickCount - Orbwalker.MissileDelay)
                     return true;
-                }
                 else if (Player.IsMelee)
                     goto end;
                 else
@@ -439,6 +436,7 @@ namespace LeagueSharp.Common
             if (missile != null && missile.SpellCaster.IsMe && IsAutoAttack(missile.SData.Name))
             {
                 _missileLaunched = true;
+                _missileLastTick = Utils.GameTimeTickCount;
             }
         }
 
