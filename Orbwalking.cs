@@ -276,13 +276,9 @@ namespace LeagueSharp.Common
                 return false;
             }
 
-            
-
-            //_missileLaunched && 
-            //&& _missileLastTick >= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
             if (Orbwalker.MissileCheck)
             {
-                if (_missileLaunched && _missileLastTick > Utils.GameTimeTickCount - Orbwalker.MissileDelay)
+                if (_missileLaunched && _missileLastTick + Orbwalker.MissileDelay < Utils.GameTimeTickCount)
                     return true;
                 else if (Player.IsMelee)
                     goto end;
