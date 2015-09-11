@@ -276,15 +276,24 @@ namespace LeagueSharp.Common
                 return false;
             }
 
-            if (_missileLaunched && Orbwalker.MissileCheck && _missileLastTick >= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
+            
+
+            //_missileLaunched && 
+            //&& _missileLastTick >= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
+            if (Orbwalker.MissileCheck)
             {
-                _missileLastTick = Utils.GameTimeTickCount;
-                return true;
+                if (_missileLaunched && _missileLastTick >= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
+                {
+                    _missileLastTick = Utils.GameTimeTickCount;
+                    return true;
+                }
+                else if (Player.IsMelee)
+                    goto end;
+                else
+                    return false;
             }
-            else if (Player.IsMelee)
-                return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
-            else
-                return false;
+            end:
+            return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
 
             //return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
         }
