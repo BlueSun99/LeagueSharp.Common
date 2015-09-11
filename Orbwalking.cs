@@ -281,7 +281,7 @@ namespace LeagueSharp.Common
                 if (_missileLaunched)
                     return true;
                 else
-                    return false;
+                    goto end;
             }
             end:
             return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
