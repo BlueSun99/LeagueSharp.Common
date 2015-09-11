@@ -106,6 +106,7 @@ namespace LeagueSharp.Common
         private static int _delay;
         private static float _minDistance = 400;
         private static bool _missileLaunched;
+        private static int _missileLastTick;
         private static readonly Random _random = new Random(DateTime.Now.Millisecond);
 
         static Orbwalking()
@@ -275,12 +276,17 @@ namespace LeagueSharp.Common
                 return false;
             }
 
-            if (_missileLaunched && Orbwalker.MissileCheck)
+            if (_missileLaunched && Orbwalker.MissileCheck && _missileLastTick <= Utils.GameTimeTickCount - Orbwalker.MissileDelay)
             {
+                _missileLastTick = Utils.GameTimeTickCount;
                 return true;
             }
+            else if (Player.IsMelee)
+                return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
+            else
+                return false;
 
-            return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
+            //return NoCancelChamps.Contains(Player.ChampionName) || (Utils.GameTimeTickCount + Game.Ping / 2 >= LastAATick + Player.AttackCastDelay * 1000 + extraWindup);
         }
 
         public static void SetMovementDelay(int delay)
@@ -531,6 +537,7 @@ namespace LeagueSharp.Common
 
                 /* Missile check */
                 _config.AddItem(new MenuItem("MissileCheck", "Use Missile Check").SetShared().SetValue(true));
+                _config.AddItem(new MenuItem("MissileDelay", "Missile Delay").SetShared().SetValue(new Slider(0, 0, 100)));
 
                 /* Delay sliders */
                 _config.AddItem(
@@ -575,6 +582,11 @@ namespace LeagueSharp.Common
             public static bool MissileCheck
             {
                 get { return _config.Item("MissileCheck").GetValue<bool>(); }
+            }
+
+            public static int MissileDelay
+            {
+                get { return _config.Item("MissileDelay").GetValue<Slider>().Value; }
             }
 
             public OrbwalkingMode ActiveMode
