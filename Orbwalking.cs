@@ -105,8 +105,8 @@ namespace LeagueSharp.Common
         private static readonly Obj_AI_Hero Player;
         private static int _delay;
         private static float _minDistance = 400;
-        private static bool _missileLaunched;
-        private static int _missileLastTick;
+        private static bool _missileLaunched = true;
+        private static int _missileLastTick = int.MaxValue;
         private static readonly Random _random = new Random(DateTime.Now.Millisecond);
 
         static Orbwalking()
@@ -276,12 +276,10 @@ namespace LeagueSharp.Common
                 return false;
             }
 
-            if (Orbwalker.MissileCheck)
+            if (Orbwalker.MissileCheck && Player.IsRanged)
             {
-                if (_missileLaunched && _missileLastTick + Orbwalker.MissileDelay < Utils.GameTimeTickCount)
+                if (_missileLaunched)
                     return true;
-                else if (Player.IsMelee)
-                    goto end;
                 else
                     return false;
             }
@@ -380,8 +378,7 @@ namespace LeagueSharp.Common
                         if (!NoCancelChamps.Contains(Player.ChampionName))
                         {
                             LastAATick = Utils.GameTimeTickCount + Game.Ping + 100 - (int)(ObjectManager.Player.AttackCastDelay * 1000f);
-                            _missileLaunched = false;
-                            _missileLastTick = 0;
+                            Utility.DelayAction.Add(Orbwalker.MissileDelay, () => { _missileLaunched = false; });
 
                             var d = GetRealAutoAttackRange(target) - 65;
                             if (Player.Distance(target, true) > d * d && !Player.IsMelee)
@@ -458,7 +455,6 @@ namespace LeagueSharp.Common
                 {
                     LastAATick = Utils.GameTimeTickCount - Game.Ping / 2;
                     _missileLaunched = false;
-                    _missileLastTick = 0;
 
                     if (Spell.Target is Obj_AI_Base)
                     {
